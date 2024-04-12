@@ -33,7 +33,7 @@ Put unjoined R1 and R2 fastq files, with adaptors and primers previously removed
 
 
 ```{r, echo=FALSE}
-path <- "~/Documents/Github/AMR-16S-rRNA/cutadapt"
+path <- "~/Documents/SWS6323_MiniWorkshop/cutadapt"
 list.files(path)
 fnFs <- sort(list.files(path, pattern="_R1_cut.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_cut.fastq.gz", full.names = TRUE))
@@ -80,7 +80,7 @@ colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled")
 rownames(track) <- sample.names
 head(track)
 write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA)
-saveRDS(seqtab, "~/Documents/Github/AMR-16S-rRNA/seqtab.rds") 
+saveRDS(seqtab, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds") 
 ```
 
 ## Assign taxonomy in DADA2
