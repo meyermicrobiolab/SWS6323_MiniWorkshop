@@ -1,0 +1,1 @@
+This repository serves as an example analysis for SWS6323 Advanced Microbial Ecology. We will use this relatively small dataset to practice running common microbial ecology analysis tasks in R. The sequencing reads used here have been trimmed of adapter and primer content on hipergator before use in R.
