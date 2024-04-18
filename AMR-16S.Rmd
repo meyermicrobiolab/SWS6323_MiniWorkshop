@@ -5,10 +5,6 @@ date: "2023-02-19"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 Load libraries
 
 ```{r, echo=FALSE}
@@ -16,10 +12,7 @@ library(dada2)
 library(ggplot2)
 library(phyloseq)
 library(vegan)
-library(knitr)
-library(ALDEx2)
 library(CoDaSeq)
-library(ANCOMBC)
 library(dplyr)
 library(nloptr)
 library(tibble)
