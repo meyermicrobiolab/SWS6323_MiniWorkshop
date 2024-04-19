@@ -80,7 +80,7 @@ head(track)
 write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA) # Examine and save the stats table as a summary of the quality of your sequencing data. 
 
 # SAVE THIS FILE SO YOU DON'T HAVE TO REPEAT ALL OF THE ABOVE STEPS, adjust name as needed
-saveRDS(seqtab, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
+saveRDS(seqtab.nochim, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
 ```
 
 ## Step 2: Assign taxonomy in DADA2 - this step will be completed in class 4/19/24
@@ -96,7 +96,8 @@ After generating the taxonomy table, we will create a phyloseq object. This "obj
 ```{r, echo=FALSE}
 # RELOAD THE SAVED INFO FROM HERE (if you have closed the project):
 seqtab.nochim <- readRDS("~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
-taxa <- assignTaxonomy(seqtab.nochim, "~/Documents/SWS6323_MiniWorkshop/silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
+taxa <- assignTaxonomy(seqtab.nochim, "~/Documents/SWS6323_MiniWorkshop/silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE) # PC users: set multithread=FALSE
+
 # FIX the NAs in the taxa table - this chunk of code (lines 101-108) is a custom script written by Dr. Meyer, you will not find it in tutorials for DADA2 or phyloseq
 taxon <- as.data.frame(taxa,stringsAsFactors=FALSE)
 taxon$Phylum[is.na(taxon$Phylum)] <- taxon$Kingdom[is.na(taxon$Phylum)]
@@ -118,20 +119,20 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps # check that all of your samples are included: 8467 taxa and 52 samples
+ps # check that all of your samples are included: 6756 taxa and 52 samples
 
 # use phyloseq to remove chloroplasts and mitochondria and Eukaryota
-get_taxa_unique(ps, "Family") # 486
-get_taxa_unique(ps, "Order") # 287
+get_taxa_unique(ps, "Family") # 481
+get_taxa_unique(ps, "Order") # 284
 get_taxa_unique(ps, "Kingdom") # 3
 ps <- subset_taxa(ps, Family !="Mitochondria")
 ps <- subset_taxa(ps, Order !="Chloroplast")
 ps <- subset_taxa(ps, Kingdom !="Eukaryota")
 ps <- subset_taxa(ps, Kingdom !="NA")
-get_taxa_unique(ps, "Family") # 483
-get_taxa_unique(ps, "Order") # 285
+get_taxa_unique(ps, "Family") # 478
+get_taxa_unique(ps, "Order") # 282
 get_taxa_unique(ps, "Kingdom") # 2
-ps  #7649  taxa and 52 samples
+ps  #6141  taxa and 52 samples
 
 # Now export cleaned otu and taxa tables from phyloseq for future reference
 otu = as(otu_table(ps), "matrix")
@@ -162,12 +163,12 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps # 7649 taxa and 52 samples
+ps # 6141 taxa and 52 samples
 psnb = subset_samples(ps, colony != "blank") #remove sample blanks
-psnb # 7649 taxa and 50 samples
+psnb # 6141 taxa and 50 samples
 # remove disease samples to compare before and after amox treatment
 ps1 = subset_samples(psnb, type != "disease") 
-ps1 # 7649 taxa and 35 samples
+ps1 # 6141 taxa and 35 samples
 otu = as(otu_table(ps1), "matrix")
 taxon = as(tax_table(ps1), "matrix")
 metadata = as(sample_data(ps1), "matrix")
@@ -176,10 +177,10 @@ write.table(taxon,"silva_nochloronomito_taxa_table_ps1.txt",sep="\t",col.names=N
 write.table(metadata,"metadata_ps1.txt",sep="\t",col.names=NA)
 
 ps5<-filter_taxa(ps1, function(x) mean(x) >5, TRUE)
-ntaxa(ps5) #131
+ntaxa(ps5) #112
 ps10<-filter_taxa(ps1, function(x) mean(x) >10, TRUE)
-ntaxa(ps10) #89
-get_taxa_unique(ps1, "Genus") #913
+ntaxa(ps10) #78
+get_taxa_unique(ps1, "Genus") #886
 get_taxa_unique(ps5, "Genus") #61
 get_taxa_unique(ps10, "Genus") #46
 
@@ -214,7 +215,7 @@ sampledata = sample_data(samples)
 ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps5 #131 taxa and 35 samples
+ps5 #112 taxa and 35 samples
 
 # First, replace 0 values with an estimate (because normalization is taking log, can't have 0)
 # Also transposing here, need samples as rows
@@ -239,7 +240,7 @@ df_out <- as.data.frame(d.pcx$x)
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
 cols<-c("before"="#6CD5D9","after"="#107A86")
 samples$type<-factor(samples$type, levels=c("before","after"))
-#pdf("PCA.pdf",bg ="white",width=8.5)
+pdf("PCA.pdf",bg ="white",width=8.5)
 p<-ggplot(df_out,aes(x=PC1,y=PC2,fill=samples$type,shape=samples$fraction))
 p<-p+geom_point(size=3)+
   theme(axis.title = element_text(size=14))+
@@ -251,7 +252,7 @@ p<-p+geom_point(size=3)+
   guides(fill = guide_legend(override.aes=list(shape=21)))+
   facet_grid(~samples$fraction)
 p + labs(x=xlab, y=ylab, fill="Type",shape="Fraction") +coord_fixed()
-#dev.off()
+dev.off()
 
 ####### Use phyloseq/vegan to perform PERMANOVA
 # set metadata as factors
@@ -287,7 +288,7 @@ ord <- ordinate(ps5_ra, "NMDS","bray") # this line calculates the Bray-Curtis di
 cols<-c("before"="#6CD5D9","after"="#107A86")
 samples$type<-factor(samples$type, levels=c("before","after"))
 # now plot the ordination using ggplot2 through phyloseq wrapper
-#pdf("nMDS.pdf",bg ="white",width=8.5)
+pdf("nMDS.pdf",bg ="white",width=8.5)
 p1 <- plot_ordination(ps5_ra, ord, color="type", shape="fraction")
 p1 <- p1 + facet_grid(~fraction)+
   geom_point(size=3)+
@@ -300,7 +301,7 @@ p1 <- p1 + facet_grid(~fraction)+
   guides(fill = guide_legend(override.aes=list(shape=21)))+
   facet_grid(~samples$fraction)
 p1 +coord_fixed()
-#dev.off()
+dev.off()
 
 
 ```
