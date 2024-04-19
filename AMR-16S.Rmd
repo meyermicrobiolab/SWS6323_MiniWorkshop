@@ -1,7 +1,7 @@
 ---
-title: "AMR-16S"
+title: "AMR-16S for R mini workshop in SWS6323"
 author: "JM"
-date: "2023-02-19"
+date: "2024-April"
 output: html_document
 ---
 
@@ -20,7 +20,7 @@ library(randomcoloR)
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
-## Step 1: Quality-filter the Illumina sequencing reads and create an Amplicon Sequence Variant (ASV) table with DADA2
+## Step 1: Quality-filter the Illumina sequencing reads and create an Amplicon Sequence Variant (ASV) table with DADA2 - this step was completed in class on 4/12/24
 
 DADA2 tutorial: https://benjjneb.github.io/dada2/tutorial_1_8.html
 
@@ -83,17 +83,21 @@ write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA) # Examine and sa
 saveRDS(seqtab, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
 ```
 
-## Assign taxonomy in DADA2
+## Step 2: Assign taxonomy in DADA2 - this step will be completed in class 4/19/24
+
+Note: my strategy for naming files is to use the same file names across projects, but organize the output into directories that indicate the project name. This saves me time when re-using code. I have indicated where file names should be updated as needed.
 
 Make sure the taxonomy reference database is in your working directory. Keep the database file gzipped. Adjust path name below. This step is very time consuming.
 
 When taxonomy assignment is complete, we will use base R and phyloseq to clean up the taxonomy table. First, we will replace NAs and empty cells with the lowest taxonomy classification available. Second, we will use phyloseq to remove reads that are classified as Eukaryotes or unclassified at the domain level (ie, we are keeping only Bacteria and Archaea because that is what our primers target).
 
+After generating the taxonomy table, we will create a phyloseq object. This "object" is the intersection of 3 data matrices: the ASV table generated with DADA2, the taxonomy table we generate with DADA2, and a table of metadata that you provide at this point. It is critical that the sample names in your metadata file exactly match the sample names on your files that went into DADA2. If the names do not match, this script will still generate a phyloseq object, but it will be missing some of the samples. Check that the number of samples is correct when you first generate the phyloseq object.
+
 ```{r, echo=FALSE}
 # RELOAD THE SAVED INFO FROM HERE (if you have closed the project):
 seqtab.nochim <- readRDS("~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
-taxa <- assignTaxonomy(seqtab.nochim, "~/Documents/Github/silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
-# FIX the NAs in the taxa table
+taxa <- assignTaxonomy(seqtab.nochim, "~/Documents/SWS6323_MiniWorkshop/silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
+# FIX the NAs in the taxa table - this chunk of code (lines 101-108) is a custom script written by Dr. Meyer, you will not find it in tutorials for DADA2 or phyloseq
 taxon <- as.data.frame(taxa,stringsAsFactors=FALSE)
 taxon$Phylum[is.na(taxon$Phylum)] <- taxon$Kingdom[is.na(taxon$Phylum)]
 taxon$Class[is.na(taxon$Class)] <- taxon$Phylum[is.na(taxon$Class)]
@@ -103,7 +107,7 @@ taxon$Genus[is.na(taxon$Genus)] <- taxon$Family[is.na(taxon$Genus)]
 write.table(taxon,"silva_taxa_table.txt",sep="\t",col.names=NA)
 write.table(seqtab.nochim, "silva_otu_table.txt",sep="\t",col.names=NA)
 
-# Create phyloseq object from otu and taxonomy tables from dada2, along with the sample metadata.
+# Create a phyloseq object from the ASV table and the taxonomy table generated with DADA2, along with the sample metadata.
 otu <- read.table("silva_otu_table.txt",sep="\t",header=TRUE, row.names=1)
 taxon <- read.table("silva_taxa_table.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
@@ -114,9 +118,9 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps 
+ps # check that all of your samples are included
 
-# remove chloroplasts and mitochondria and Eukaryota
+# use phyloseq to remove chloroplasts and mitochondria and Eukaryota
 get_taxa_unique(ps, "Family")
 get_taxa_unique(ps, "Order")
 get_taxa_unique(ps, "Kingdom")
