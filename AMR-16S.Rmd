@@ -211,10 +211,10 @@ OTU = otu_table(otu, taxa_are_rows=FALSE)
 taxon<-as.matrix(taxon)
 TAX = tax_table(taxon)
 sampledata = sample_data(samples)
-ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps #131 taxa and 35 samples
+ps5 #131 taxa and 35 samples
 
 # First, replace 0 values with an estimate (because normalization is taking log, can't have 0)
 # Also transposing here, need samples as rows
@@ -239,7 +239,7 @@ df_out <- as.data.frame(d.pcx$x)
 theme_set(theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank()))
 cols<-c("before"="#6CD5D9","after"="#107A86")
 samples$type<-factor(samples$type, levels=c("before","after"))
-pdf("PCA.pdf",bg ="white",width=8.5)
+#pdf("PCA.pdf",bg ="white",width=8.5)
 p<-ggplot(df_out,aes(x=PC1,y=PC2,fill=samples$type,shape=samples$fraction))
 p<-p+geom_point(size=3)+
   theme(axis.title = element_text(size=14))+
@@ -251,7 +251,7 @@ p<-p+geom_point(size=3)+
   guides(fill = guide_legend(override.aes=list(shape=21)))+
   facet_grid(~samples$fraction)
 p + labs(x=xlab, y=ylab, fill="Type",shape="Fraction") +coord_fixed()
-dev.off()
+#dev.off()
 
 ####### Use phyloseq/vegan to perform PERMANOVA
 # set metadata as factors
@@ -259,7 +259,7 @@ type<-as.character(samples$type)
 frac<-as.character(samples$fraction)
 # permanova between groups using Aitchison distance
 dist.clr <- dist(E.clr)
-perm<-adonis2(dist.clr~type*frac,as(sample_data(ps),"data.frame"))
+perm<-adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
 print(perm)
 ```
 
@@ -269,8 +269,38 @@ print(perm)
 For comparison to the ordination generated above designed for compositional datasets, let's see what an ordination using a more traditional workflow looks like - specifically an nMDS ordination from the Bray-Curtis dissimilarity of relative abundance data.
 
 ```{r, echo=FALSE}
+otu <- read.table("silva_nochloronomito_otu_table_ps5.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_ps5.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata_ps5.txt",sep="\t",header=T,row.names=1)
+OTU = otu_table(otu, taxa_are_rows=FALSE)
+taxon<-as.matrix(taxon)
+TAX = tax_table(taxon)
+sampledata = sample_data(samples)
+ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+               sample_data(samples), 
+               tax_table(taxon))
+ps5 #131 taxa and 35 samples
+ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
 
-
+ord <- ordinate(ps5_ra, "NMDS","bray") # this line calculates the Bray-Curtis distance and calculates the ordination
+# set preferences for a pretty plot
+cols<-c("before"="#6CD5D9","after"="#107A86")
+samples$type<-factor(samples$type, levels=c("before","after"))
+# now plot the ordination
+#pdf("nMDS.pdf",bg ="white",width=8.5)
+p1 <- plot_ordination(ps5_ra, ord, color="type", shape="fraction")
+p1 <- p1 + facet_grid(~fraction)+
+  geom_point(size=3)+
+  theme(axis.title = element_text(size=14))+
+  theme(axis.text=element_text(size=12))+
+  theme(legend.title = element_text(size=14))+
+  theme(legend.text = element_text(size=12))+
+  scale_shape_manual(values=c(21,22))+
+  #scale_fill_manual(values=cols)+
+  guides(fill = guide_legend(override.aes=list(shape=21)))+
+  facet_grid(~samples$fraction)
+p1 +coord_fixed()
+#dev.off()
 
 
 ```
