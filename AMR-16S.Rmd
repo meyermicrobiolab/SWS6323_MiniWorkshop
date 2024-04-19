@@ -20,13 +20,18 @@ library(randomcoloR)
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
-## Quality-filter the sequencing reads and create Amplicon Sequence Variant (ASV) tables with DADA2
+## Step 1: Quality-filter the Illumina sequencing reads and create an Amplicon Sequence Variant (ASV) table with DADA2
+
+DADA2 tutorial: https://benjjneb.github.io/dada2/tutorial_1_8.html
 
 Put unjoined R1 and R2 fastq files, with adaptors and primers previously removed with cutadapt into a directory for DADA2. Here, our forward and reverse fastq filenames have format: SAMPLENAME_R1_cut.fastq.gz and SAMPLENAME_R2_cut.fastq.gz
 
+# Be sure to update the path names on line 34 and line 82 as needed.
+
+This chunk of code will save the ASV table as an .rds file that can be reopened later. Please note that if you repeat the DADA2 step, you will get a slightly different table every time. If you have sequencing data from multiple sequencing runs, you should run DADA2 on each sequencing run and then merge the tables as described here: https://benjjneb.github.io/dada2/bigdata_paired.html
 
 ```{r, echo=FALSE}
-path <- "~/Documents/SWS6323_MiniWorkshop/cutadapt"
+path <- "~/Documents/SWS6323_MiniWorkshop/cutadapt" # adjust file name as needed
 list.files(path)
 fnFs <- sort(list.files(path, pattern="_R1_cut.fastq.gz", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_cut.fastq.gz", full.names = TRUE))
@@ -72,8 +77,10 @@ track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab)
 colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled")
 rownames(track) <- sample.names
 head(track)
-write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA)
-saveRDS(seqtab, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds") 
+write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA) # Examine and save the stats table as a summary of the quality of your sequencing data. 
+
+# SAVE THIS FILE SO YOU DON'T HAVE TO REPEAT ALL OF THE ABOVE STEPS, adjust name as needed
+saveRDS(seqtab, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
 ```
 
 ## Assign taxonomy in DADA2
@@ -83,6 +90,8 @@ Make sure the taxonomy reference database is in your working directory. Keep the
 When taxonomy assignment is complete, we will use base R and phyloseq to clean up the taxonomy table. First, we will replace NAs and empty cells with the lowest taxonomy classification available. Second, we will use phyloseq to remove reads that are classified as Eukaryotes or unclassified at the domain level (ie, we are keeping only Bacteria and Archaea because that is what our primers target).
 
 ```{r, echo=FALSE}
+# RELOAD THE SAVED INFO FROM HERE (if you have closed the project):
+seqtab.nochim <- readRDS("~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
 taxa <- assignTaxonomy(seqtab.nochim, "~/Documents/Github/silva_nr99_v138.1_train_set.fa.gz", multithread=TRUE)
 # FIX the NAs in the taxa table
 taxon <- as.data.frame(taxa,stringsAsFactors=FALSE)
