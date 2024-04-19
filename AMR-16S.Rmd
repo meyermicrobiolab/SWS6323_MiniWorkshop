@@ -108,7 +108,7 @@ write.table(taxon,"silva_taxa_table.txt",sep="\t",col.names=NA)
 write.table(seqtab.nochim, "silva_otu_table.txt",sep="\t",col.names=NA)
 
 # Create a phyloseq object from the ASV table and the taxonomy table generated with DADA2, along with the sample metadata.
-otu <- read.table("silva_otu_table.txt",sep="\t",header=TRUE, row.names=1)
+otu <- read.table("silva_otu_table.txt",sep="\t",header=TRUE, row.names=1) # reading in this data can take time - this file took 5 mins to load
 taxon <- read.table("silva_taxa_table.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata.txt",sep="\t",header=T,row.names=1)
 OTU = otu_table(otu, taxa_are_rows=FALSE)
@@ -118,20 +118,20 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps # check that all of your samples are included
+ps # check that all of your samples are included: 8467 taxa and 52 samples
 
 # use phyloseq to remove chloroplasts and mitochondria and Eukaryota
-get_taxa_unique(ps, "Family")
-get_taxa_unique(ps, "Order")
-get_taxa_unique(ps, "Kingdom")
+get_taxa_unique(ps, "Family") # 486
+get_taxa_unique(ps, "Order") # 287
+get_taxa_unique(ps, "Kingdom") # 3
 ps <- subset_taxa(ps, Family !="Mitochondria")
 ps <- subset_taxa(ps, Order !="Chloroplast")
 ps <- subset_taxa(ps, Kingdom !="Eukaryota")
 ps <- subset_taxa(ps, Kingdom !="NA")
-get_taxa_unique(ps, "Family")
-get_taxa_unique(ps, "Order") 
-get_taxa_unique(ps, "Kingdom")
-ps  #6138 taxa and 52 samples
+get_taxa_unique(ps, "Family") # 483
+get_taxa_unique(ps, "Order") # 285
+get_taxa_unique(ps, "Kingdom") # 2
+ps  #7649  taxa and 52 samples
 
 # Now export cleaned otu and taxa tables from phyloseq for future reference
 otu = as(otu_table(ps), "matrix")
@@ -148,7 +148,7 @@ write.table(otu_ra,"silva_nochloronomito_otu_table_RA.txt",sep="\t",col.names=NA
 ```
 
 
-# Now, time to explore the data.
+# Now, time to explore the data with phyloseq.
 
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
@@ -162,12 +162,12 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps # 6138 taxa and 52 samples
+ps # 7649 taxa and 52 samples
 psnb = subset_samples(ps, colony != "blank") #remove sample blanks
-psnb # 6138 taxa and 50 samples
+psnb # 7649 taxa and 50 samples
 # remove disease samples to compare before and after amox treatment
 ps1 = subset_samples(psnb, type != "disease") 
-ps1 # 6138 taxa and 35 samples
+ps1 # 7649 taxa and 35 samples
 otu = as(otu_table(ps1), "matrix")
 taxon = as(tax_table(ps1), "matrix")
 metadata = as(sample_data(ps1), "matrix")
@@ -176,10 +176,10 @@ write.table(taxon,"silva_nochloronomito_taxa_table_ps1.txt",sep="\t",col.names=N
 write.table(metadata,"metadata_ps1.txt",sep="\t",col.names=NA)
 
 ps5<-filter_taxa(ps1, function(x) mean(x) >5, TRUE)
-ntaxa(ps5) #112
+ntaxa(ps5) #131
 ps10<-filter_taxa(ps1, function(x) mean(x) >10, TRUE)
-ntaxa(ps10) #78
-get_taxa_unique(ps1, "Genus") #887
+ntaxa(ps10) #89
+get_taxa_unique(ps1, "Genus") #913
 get_taxa_unique(ps5, "Genus") #61
 get_taxa_unique(ps10, "Genus") #46
 
@@ -198,7 +198,9 @@ write.table(otu_ps5_ra,"silva_nochloronomito_otu_table_ps5_RA.txt",sep="\t",col.
 
 ```
 
-# Perform center-log-ratio transformation on ASVs and calculate Aitchison Distance and principal components
+# Pipeline in this block of code: ASV table -> CLR transformation -> Aitchison distance -> PCA ordination
+
+This block of code will perform center-log-ratio transformation on ASVs and calculate Aitchison Distance and principal components. This is the recommended pipeline for compositional datasets. 
 
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
@@ -212,7 +214,7 @@ sampledata = sample_data(samples)
 ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps #112 taxa and 35 samples
+ps #131 taxa and 35 samples
 
 # First, replace 0 values with an estimate (because normalization is taking log, can't have 0)
 # Also transposing here, need samples as rows
@@ -262,6 +264,25 @@ print(perm)
 ```
 
 
+# Pipeline in this block of code: ASV table -> relative abundance -> Bray-Curtis distance -> nMDS ordination
+
+For comparison to the ordination generated above designed for compositional datasets, let's see what an ordination using a more traditional workflow looks like - specifically an nMDS ordination from the Bray-Curtis dissimilarity of relative abundance data.
+
+```{r, echo=FALSE}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
 Stacked bar charts
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
@@ -272,25 +293,25 @@ OTU = otu_table(otu, taxa_are_rows=FALSE)
 taxon<-as.matrix(taxon)
 TAX = tax_table(taxon)
 sampledata = sample_data(samples)
-ps <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps #112 taxa and 35 samples
+ps5 #131 taxa and 35 samples
 
-ps_ra<-transform_sample_counts(ps, function(OTU) OTU/sum(OTU))
-get_taxa_unique(ps_ra, "Class") #19
-get_taxa_unique(ps_ra, "Order") #37
-get_taxa_unique(ps_ra, "Family") #53
-get_taxa_unique(ps_ra, "Genus") #61
+ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
+get_taxa_unique(ps5_ra, "Class") #19
+get_taxa_unique(ps5_ra, "Order") #37
+get_taxa_unique(ps5_ra, "Family") #52
+get_taxa_unique(ps5_ra, "Genus") #61
 
-sample_data(ps_ra)$type<-factor(sample_data(ps_ra)$type, levels=c("before","after"))
+sample_data(ps5_ra)$type<-factor(sample_data(ps_ra)$type, levels=c("before","after"))
 
 n <- 19
 # after plotting, you can re-run the next line to create a different selection of colors
 palette <- distinctColorPalette(n)
 
 pdf("barchart_Class.pdf",width=11)
-p1=plot_bar(ps_ra, "colony" ,fill="Class")+
+p1=plot_bar(ps5_ra, "colony" ,fill="Class")+
   facet_grid(fraction~type,scales="free",space="free")+
   geom_bar(aes(fill=Class), stat="identity",position="stack")+
   theme_bw()+
@@ -309,7 +330,7 @@ n <- 37
 palette <- distinctColorPalette(n)
 
 pdf("barchart_Order.pdf",width=11)
-p1=plot_bar(ps_ra, "colony" ,fill="Order")+
+p1=plot_bar(p5s_ra, "colony" ,fill="Order")+
   facet_grid(fraction~type,scales="free",space="free")+
   geom_bar(aes(fill=Order), stat="identity",position="stack")+
   theme_bw()+
@@ -323,11 +344,11 @@ p1
 dev.off()
 
 
-n <- 53
+n <- 52
 palette <- distinctColorPalette(n)
 
 pdf("barchart_Family.pdf",width=11)
-p1=plot_bar(ps_ra, "colony" ,fill="Family")+
+p1=plot_bar(ps5_ra, "colony" ,fill="Family")+
   facet_grid(fraction~type,scales="free",space="free")+
   geom_bar(aes(fill=Family), stat="identity",position="stack")+
   theme_bw()+
@@ -344,7 +365,7 @@ n <- 61
 palette <- distinctColorPalette(n)
 
 pdf("barchart_Genus.pdf",width=11)
-p1=plot_bar(ps_ra, "colony" ,fill="Genus")+
+p1=plot_bar(ps5_ra, "colony" ,fill="Genus")+
   facet_grid(fraction~type,scales="free",space="free")+
   geom_bar(aes(fill=Genus), stat="identity",position="stack")+
   theme_bw()+
@@ -366,49 +387,5 @@ dev.off()
 
 
 
-
-
-
-ANCOM-BC
-https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html
-
-
-```{r, echo=FALSE}
-# Start by creating phyloseq object using full dataset (low abundance ASVs are not removed).
-
-otu <- read.table("silva_nochloronomito_otu_table_ps1.txt",sep="\t",header=TRUE, row.names=1)
-taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
-samples<-read.table("metadata_ps1.txt",sep="\t",header=T,row.names=1)
-OTU = otu_table(otu, taxa_are_rows=FALSE)
-taxon<-as.matrix(taxon)
-TAX = tax_table(taxon)
-sampledata = sample_data(samples)
-ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
-               sample_data(samples), 
-               tax_table(taxon))
-ps1 #6138 taxa and 35 samples
-
-set.seed(123)
-output = ancombc2(data = ps1, assay_name = "counts", tax_level = "Genus",
-                  fix_formula = "type", rand_formula = NULL,
-                  p_adj_method = "holm", pseudo = 0, pseudo_sens = TRUE,
-                  prv_cut = 0.10, lib_cut = 1000, s0_perc = 0.05,
-                  group = "type", struc_zero = FALSE, neg_lb = FALSE,
-                  alpha = 0.05, n_cl = 2, verbose = TRUE,
-                  global = FALSE, pairwise = FALSE, 
-                  dunnet = FALSE, trend = FALSE,
-                  iter_control = list(tol = 1e-5, max_iter = 20, 
-                                      verbose = FALSE),
-                  em_control = list(tol = 1e-5, max_iter = 100),
-                  lme_control = NULL, mdfdr_control = NULL, 
-                  trend_control = NULL)
-
-res_prim = output$res
-output$res
-write.table(res_prim,file="ancomBC-results-BH-genus-by-treatment.txt")
-tab_sens = output$pseudo_sens_tab
-
-
-```
 
 
