@@ -286,7 +286,7 @@ ord <- ordinate(ps5_ra, "NMDS","bray") # this line calculates the Bray-Curtis di
 # set preferences for a pretty plot
 cols<-c("before"="#6CD5D9","after"="#107A86")
 samples$type<-factor(samples$type, levels=c("before","after"))
-# now plot the ordination
+# now plot the ordination using ggplot2 through phyloseq wrapper
 #pdf("nMDS.pdf",bg ="white",width=8.5)
 p1 <- plot_ordination(ps5_ra, ord, color="type", shape="fraction")
 p1 <- p1 + facet_grid(~fraction)+
@@ -296,7 +296,7 @@ p1 <- p1 + facet_grid(~fraction)+
   theme(legend.title = element_text(size=14))+
   theme(legend.text = element_text(size=12))+
   scale_shape_manual(values=c(21,22))+
-  #scale_fill_manual(values=cols)+
+  scale_color_manual(values=cols)+
   guides(fill = guide_legend(override.aes=list(shape=21)))+
   facet_grid(~samples$fraction)
 p1 +coord_fixed()
