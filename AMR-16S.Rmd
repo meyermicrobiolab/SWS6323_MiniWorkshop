@@ -281,7 +281,7 @@ frac<-as.character(samples$fraction)
 
 # permanova between groups using Aitchison distance
 dist.clr <- dist(E.clr)
-perm_atch<-adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
+perm_atch <- adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
 print(perm_atch) # copy the output on the console into a text file for future reference.
 ```
 
@@ -356,7 +356,7 @@ sampledata = sample_data(samples)
 ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps5 #131 taxa and 35 samples
+ps5 #112 taxa and 35 samples
 
 # Convert ASV counts to relative abundance for plotting
 ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
@@ -372,6 +372,7 @@ sample_data(ps5_ra)$type<-factor(sample_data(ps5_ra)$type, levels=c("before","af
 n <- 19
 # after plotting, you can re-run the next line to create a different selection of colors
 palette <- distinctColorPalette(n)
+print(palette)
 
 pdf("barchart_Class.pdf",width=11)
 p1=plot_bar(ps5_ra, "colony" ,fill="Class")+
