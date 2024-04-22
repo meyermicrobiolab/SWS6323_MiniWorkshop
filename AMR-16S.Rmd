@@ -378,7 +378,7 @@ n <- 37
 palette <- distinctColorPalette(n)
 
 pdf("barchart_Order.pdf",width=11)
-p1=plot_bar(p5s_ra, "colony" ,fill="Order")+
+p1=plot_bar(ps5_ra, "colony" ,fill="Order")+
   facet_grid(fraction~type,scales="free",space="free")+
   geom_bar(aes(fill=Order), stat="identity",position="stack")+
   theme_bw()+
