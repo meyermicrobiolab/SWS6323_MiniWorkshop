@@ -259,6 +259,21 @@ p<-p+geom_point(size=3)+
 p + labs(x=xlab, y=ylab, fill="Type",shape="Fraction") +coord_fixed()
 dev.off()
 
+
+# For comparison, PCA without faceting:
+pdf("PCA_nofacet.pdf",bg ="white",width=8.5)
+p<-ggplot(df_out,aes(x=PC1,y=PC2,fill=samples$type,shape=samples$fraction))
+p<-p+geom_point(size=3)+
+  theme(axis.title = element_text(size=14))+
+  theme(axis.text=element_text(size=12))+
+  theme(legend.title = element_text(size=14))+
+  theme(legend.text = element_text(size=12))+
+  scale_shape_manual(values=c(21,22))+
+  scale_fill_manual(values=cols)+
+  guides(fill = guide_legend(override.aes=list(shape=21)))
+p + labs(x=xlab, y=ylab, fill="Type",shape="Fraction") +coord_fixed()
+dev.off()
+
 ####### Use phyloseq/vegan to perform PERMANOVA
 # set metadata as factors
 type<-as.character(samples$type)
