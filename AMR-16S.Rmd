@@ -83,7 +83,7 @@ write.table(track, "dada_read_stats.txt",sep="\t",col.names=NA) # Examine and sa
 saveRDS(seqtab.nochim, "~/Documents/SWS6323_MiniWorkshop/seqtab.rds")
 ```
 
-## Step 2: Assign taxonomy in DADA2 - this step will be completed in class 4/19/24
+## Step 2: Assign taxonomy in DADA2 - this step completed in class 4/19/24
 
 Note: my strategy for naming files is to use the same file names across projects, but organize the output into directories that indicate the project name. This saves me time when re-using code. I have indicated where file names should be updated as needed.
 
@@ -148,8 +148,10 @@ write.table(otu_ra,"silva_nochloronomito_otu_table_RA.txt",sep="\t",col.names=NA
 
 ```
 
+## Step 3: Explore the data with phyloseq - this step completed in class 4/19/24
 
-# Now, time to explore the data with phyloseq.
+In this step we will also use phyloseq to remove sequences that are not classified as Bacteria or Archaea and to remove sequences classified as chloroplasts or mitochondria. At the end of this step we will save the tables for future use, including a table with relative abundances instead of the raw count data.
+
 
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
@@ -199,9 +201,10 @@ write.table(otu_ps5_ra,"silva_nochloronomito_otu_table_ps5_RA.txt",sep="\t",col.
 
 ```
 
+## Step 4: Examine ordinations of the data - this step completed in class 4/19/24
 # Pipeline in this block of code: ASV table -> CLR transformation -> Aitchison distance -> PCA ordination
 
-This block of code will perform center-log-ratio transformation on ASVs and calculate Aitchison Distance and principal components. This is the recommended pipeline for compositional datasets. 
+This block of code will perform center-log-ratio transformation on ASVs and calculate Aitchison Distance and principal components. This is the recommended pipeline for compositional datasets. You can begin this chunk of code with an empty R environment - in other words, you can start here without repeating any of the above steps.
 
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
@@ -263,11 +266,10 @@ dist.clr <- dist(E.clr)
 perm<-adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
 print(perm)
 ```
-
-
+## Step 4: Examine ordinations of the data - this step completed in class 4/19/24
 # Pipeline in this block of code: ASV table -> relative abundance -> Bray-Curtis distance -> nMDS ordination
 
-For comparison to the ordination generated above designed for compositional datasets, let's see what an ordination using a more traditional workflow looks like - specifically an nMDS ordination from the Bray-Curtis dissimilarity of relative abundance data.
+For comparison to the ordination generated above designed for compositional datasets, let's see what an ordination using a more traditional workflow looks like - specifically an nMDS ordination from the Bray-Curtis dissimilarity of relative abundance data. Again, you can begin this chunk of code with an empty R environment - in other words, you can start here without repeating any of the above steps.
 
 ```{r, echo=FALSE}
 otu <- read.table("silva_nochloronomito_otu_table_ps5.txt",sep="\t",header=TRUE, row.names=1)
@@ -307,12 +309,11 @@ dev.off()
 
 
 
+## Create stacked bar charts from relative abundance data
+
+You can begin this chunk of code with an empty R environment - in other words, you can start here without repeating any of the above steps.
 
 
-
-
-
-Stacked bar charts
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
 otu <- read.table("silva_nochloronomito_otu_table_ps5.txt",sep="\t",header=TRUE, row.names=1)
@@ -328,11 +329,13 @@ ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE),
 ps5 #131 taxa and 35 samples
 
 ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
+# In the next four lines I am seeing how many colors I would need in my legend to accommodate each taxonomic level
 get_taxa_unique(ps5_ra, "Class") #19
 get_taxa_unique(ps5_ra, "Order") #37
 get_taxa_unique(ps5_ra, "Family") #52
 get_taxa_unique(ps5_ra, "Genus") #61
 
+# manually setting the order of my metadata because the default in R is alphabetical
 sample_data(ps5_ra)$type<-factor(sample_data(ps_ra)$type, levels=c("before","after"))
 
 n <- 19
