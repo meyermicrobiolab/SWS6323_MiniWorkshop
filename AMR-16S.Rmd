@@ -206,6 +206,8 @@ write.table(otu_ps5_ra,"silva_nochloronomito_otu_table_ps5_RA.txt",sep="\t",col.
 
 This block of code will perform center-log-ratio transformation on ASVs and calculate Aitchison Distance and principal components. This is the recommended pipeline for compositional datasets. You can begin this chunk of code with an empty R environment - in other words, you can start here without repeating any of the above steps.
 
+The PERMANOVA test to accompany the PCA ordination will be completed in class 4/22/24.
+
 ```{r, echo=FALSE}
 # load in data and create phyloseq object
 otu <- read.table("silva_nochloronomito_otu_table_ps5.txt",sep="\t",header=TRUE, row.names=1)
@@ -261,17 +263,20 @@ dev.off()
 # set metadata as factors
 type<-as.character(samples$type)
 frac<-as.character(samples$fraction)
+
 # permanova between groups using Aitchison distance
 dist.clr <- dist(E.clr)
-perm<-adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
-print(perm)
+perm_atch<-adonis2(dist.clr~type*frac,as(sample_data(ps5),"data.frame"))
+print(perm_atch) # copy the output on the console into a text file for future reference.
 ```
+
 ## Step 4: Examine ordinations of the data - this step completed in class 4/19/24
 # Pipeline in this block of code: ASV table -> relative abundance -> Bray-Curtis distance -> nMDS ordination
 
 For comparison to the ordination generated above designed for compositional datasets, let's see what an ordination using a more traditional workflow looks like - specifically an nMDS ordination from the Bray-Curtis dissimilarity of relative abundance data. Again, you can begin this chunk of code with an empty R environment - in other words, you can start here without repeating any of the above steps.
 
 ```{r, echo=FALSE}
+# load in data and create phyloseq object
 otu <- read.table("silva_nochloronomito_otu_table_ps5.txt",sep="\t",header=TRUE, row.names=1)
 taxon <- read.table("silva_nochloronomito_taxa_table_ps5.txt",sep="\t",header=TRUE,row.names=1)
 samples<-read.table("metadata_ps5.txt",sep="\t",header=T,row.names=1)
@@ -282,8 +287,8 @@ sampledata = sample_data(samples)
 ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps5 #131 taxa and 35 samples
-ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
+ps5 #112 taxa and 35 samples
+ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU)) # convert ASV counts to relative abundance
 
 ord <- ordinate(ps5_ra, "NMDS","bray") # this line calculates the Bray-Curtis distance and calculates the ordination
 # set preferences for a pretty plot
@@ -304,9 +309,19 @@ p1 +coord_fixed()
 dev.off()
 
 
+####### Use phyloseq/vegan to perform PERMANOVA
+#calculate the Bray Curtis distance
+bc <- distance(ps5_ra, method="bray", type="samples")
+
+# set metadata as factors
+type<-as.character(samples$type)
+frac<-as.character(samples$fraction)
+
+# perform PERMANOVA between groups using Bray Curtis ditance
+perm_bc <- adonis2(bc~type*frac,as(sample_data(ps5_ra),"data.frame"))
+print(perm_bc) # copy the output on the console into a text file for future reference.
+
 ```
-
-
 
 
 ## Create stacked bar charts from relative abundance data
@@ -328,6 +343,7 @@ ps5 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE),
                tax_table(taxon))
 ps5 #131 taxa and 35 samples
 
+# Convert ASV counts to relative abundance for plotting
 ps5_ra<-transform_sample_counts(ps5, function(OTU) OTU/sum(OTU))
 # In the next four lines I am seeing how many colors I would need in my legend to accommodate each taxonomic level
 get_taxa_unique(ps5_ra, "Class") #19
@@ -336,7 +352,7 @@ get_taxa_unique(ps5_ra, "Family") #52
 get_taxa_unique(ps5_ra, "Genus") #61
 
 # manually setting the order of my metadata because the default in R is alphabetical
-sample_data(ps5_ra)$type<-factor(sample_data(ps_ra)$type, levels=c("before","after"))
+sample_data(ps5_ra)$type<-factor(sample_data(ps5_ra)$type, levels=c("before","after"))
 
 n <- 19
 # after plotting, you can re-run the next line to create a different selection of colors
@@ -421,3 +437,4 @@ dev.off()
 
 
 
+"Cla
