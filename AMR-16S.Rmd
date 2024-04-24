@@ -16,6 +16,7 @@ library(CoDaSeq)
 library(dplyr)
 library(tibble)
 library(randomcoloR)
+library(ANCOMBC)
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
 ```
 
@@ -446,7 +447,14 @@ dev.off()
 
 ## Differential abundance of taxa across treatments using ANCOM-BC2
 
+Here is the online tutorial for ANCOM-BC2:
 https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html
+
+This tutorial is not as easy to use as the DADA2 tutorial. There are many options for customization, but this tutorial does not list out what the options mean, as I frequently see with programs you would run on the command line.
+
+
+
+This chunk of code can be run with a clean environment, without repeating any of the above steps The input for ANCOM-BC2 used here is a phyloseq object, so we start by reading in the ASV table, the taxonomy table, and the metadata and create that phyloseq object.  Notice that you will be using the dataset that does not have diseased or blank samples and *does not have low abundance ASVs removed*.
 
 
 ```{r, echo=FALSE}
@@ -462,14 +470,14 @@ sampledata = sample_data(samples)
 ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
                sample_data(samples), 
                tax_table(taxon))
-ps1 #6138 taxa and 35 samples
+ps1 #6141 taxa and 35 samples
 
 # ANCOM-BC2 results will be expressed as a relative relationship - it will test variables in the order that they are input. The default in R is alphabetical order, but I want to compare taxa "after" relative to "before", so I need to manually state the order of input.
 sample_data(ps1)$type<-factor(sample_data(ps1)$type,levels=c("before","after"))
 # You can verify the change by checking:
 levels(sample_data(ps1)$type)
 
-
+# Using ANCOM-BC2 to detect differentially abundant taxa between treatment types.
 set.seed(123)
 output = ancombc2(data = ps1, assay_name = "counts", tax_level = "Genus",
                   fix_formula = "fraction + type", rand_formula = NULL,
