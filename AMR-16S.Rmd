@@ -14,7 +14,6 @@ library(phyloseq)
 library(vegan)
 library(CoDaSeq)
 library(dplyr)
-library(nloptr)
 library(tibble)
 library(randomcoloR)
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
@@ -445,12 +444,53 @@ dev.off()
 
 ```
 
+## Differential abundance of taxa across treatments using ANCOM-BC2
+
+https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html
+
+
+```{r, echo=FALSE}
+# Start by creating phyloseq object using full dataset (low abundance ASVs are not removed).
+
+otu <- read.table("silva_nochloronomito_otu_table_ps1.txt",sep="\t",header=TRUE, row.names=1)
+taxon <- read.table("silva_nochloronomito_taxa_table_ps1.txt",sep="\t",header=TRUE,row.names=1)
+samples<-read.table("metadata_ps1.txt",sep="\t",header=T,row.names=1)
+OTU = otu_table(otu, taxa_are_rows=FALSE)
+taxon<-as.matrix(taxon)
+TAX = tax_table(taxon)
+sampledata = sample_data(samples)
+ps1 <- phyloseq(otu_table(otu, taxa_are_rows=FALSE), 
+               sample_data(samples), 
+               tax_table(taxon))
+ps1 #6138 taxa and 35 samples
+
+# ANCOM-BC2 results will be expressed as a relative relationship - it will test variables in the order that they are input. The default in R is alphabetical order, but I want to compare taxa "after" relative to "before", so I need to manually state the order of input.
+sample_data(ps1)$type<-factor(sample_data(ps1)$type,levels=c("before","after"))
+# You can verify the change by checking:
+levels(sample_data(ps1)$type)
+
+
+set.seed(123)
+output = ancombc2(data = ps1, assay_name = "counts", tax_level = "Genus",
+                  fix_formula = "fraction + type", rand_formula = NULL,
+                  p_adj_method = "holm", pseudo = 0, pseudo_sens = TRUE,
+                  prv_cut = 0.10, lib_cut = 1000, s0_perc = 0.05,
+                  group = "type", struc_zero = FALSE, neg_lb = FALSE,
+                  alpha = 0.05, n_cl = 2, verbose = TRUE,
+                  global = FALSE, pairwise = FALSE, 
+                  dunnet = FALSE, trend = FALSE,
+                  iter_control = list(tol = 1e-5, max_iter = 20, 
+                                      verbose = FALSE),
+                  em_control = list(tol = 1e-5, max_iter = 100),
+                  lme_control = NULL, mdfdr_control = NULL, 
+                  trend_control = NULL)
+
+res_prim = output$res
+output$res
+write.table(res_prim,file="ancomBC-results-BH-genus-by-type.txt",sep="\t") # getting "NA" for some taxa - need to find out why it is doing this
+
+```
 
 
 
 
-
-
-
-
-"Cla
