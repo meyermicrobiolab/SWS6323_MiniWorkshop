@@ -501,6 +501,31 @@ res_prim = output$res
 output$res
 write.table(res_prim,file="ancomBC-results-BH-genus-by-type.txt",sep="\t") # getting "NA" for some taxa - need to find out why it is doing this
 
+
+
+#test some other options
+set.seed(123)
+output_ASV = ancombc2(data = ps1, assay_name = "counts", tax_level = NULL,
+                  fix_formula = "fraction + type", 
+                  rand_formula = NULL, # input random effects
+                  p_adj_method = "holm", pseudo = 0, pseudo_sens = TRUE, # multicomparison p adjustment
+                  prv_cut = 0.10, lib_cut = 0, s0_perc = 0.05,
+                  group = "type", struc_zero = FALSE, neg_lb = FALSE,
+                  alpha = 0.05, n_cl = 2, verbose = TRUE, # p values cut off
+                  global = FALSE, pairwise = FALSE, dunnet = FALSE, trend = FALSE,
+                  iter_control = list(tol = 1e-2, max_iter = 50, verbose = TRUE), # number of iterations
+                  em_control = list(tol = 1e-5, max_iter = 100),
+                  lme_control = NULL, mdfdr_control = NULL, 
+                  trend_control = NULL)
+
+res_prim_ASV = output_ASV$res
+output_ASV$res
+write.table(res_prim_ASV,file="ancomBC-results-BH-ASV-by-type.txt",sep="\t")
+
+sum(res_prim_ASV$diff_typeafter == TRUE) # how many differentially abundant taxa by treatment type? #0
+sum(res_prim_ASV$diff_fractionRNA == TRUE) # how many differentially abundant taxa by nucleic acid fraction? #6
+nrow(res_prim_ASV) ## number of ASVs analyzed
+
 ```
 
 
