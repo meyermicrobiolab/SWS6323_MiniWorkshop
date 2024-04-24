@@ -500,7 +500,9 @@ output = ancombc2(data = ps1, assay_name = "counts", tax_level = "Genus",
 res_prim = output$res
 output$res
 write.table(res_prim,file="ancomBC-results-BH-genus-by-type.txt",sep="\t") # getting "NA" for some taxa - need to find out why it is doing this
-
+sum(res_prim$diff_typeafter == TRUE) # how many differentially abundant taxa by treatment type? #1
+sum(res_prim$diff_fractionRNA == TRUE) # how many differentially abundant taxa by nucleic acid fraction? #3
+nrow(res_prim) ## number of genera analyzed
 
 
 #test some other options
