@@ -447,7 +447,10 @@ dev.off()
 
 ## Differential abundance of taxa across treatments using ANCOM-BC2
 
-There are many different programs you can choose to examine the differential abundance of taxa among your groups of samples. Nearing et al 2022 (https://www.nature.com/articles/s41467-022-28034-z) tested the performance of several commonly used tools and found that ANCOM-BC2 was one of the best performers and it is designed specifically for dealing with the compositional datasets of microbiomes.
+There are many different programs you can choose to examine the differential abundance of taxa among your groups of samples.
+Figure 2 in the Peeters et al. 2021 paper (https://www.frontiersin.org/articles/10.3389/fbinf.2021.774631/full) we read earlier in the semester shows 19 software tools that determine differential abundance.
+
+Nearing et al 2022 (https://www.nature.com/articles/s41467-022-28034-z) tested the performance of several commonly used tools and found that ANCOM-BC2 was one of the best performers and it is designed specifically for dealing with the compositional datasets of microbiomes.
 
 Here is the online tutorial for ANCOM-BC2:
 https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html
