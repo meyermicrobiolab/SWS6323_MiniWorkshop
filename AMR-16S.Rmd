@@ -447,14 +447,18 @@ dev.off()
 
 ## Differential abundance of taxa across treatments using ANCOM-BC2
 
+There are many different programs you can choose to examine the differential abundance of taxa among your groups of samples. Nearing et al 2022 (https://www.nature.com/articles/s41467-022-28034-z) tested the performance of several commonly used tools and found that ANCOM-BC2 was one of the best performers and it is designed specifically for dealing with the compositional datasets of microbiomes.
+
 Here is the online tutorial for ANCOM-BC2:
 https://bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html
 
-This tutorial is not as easy to use as the DADA2 tutorial. There are many options for customization, but this tutorial does not list out what the options mean, as I frequently see with programs you would run on the command line.
+This tutorial is not as easy to use as the DADA2 tutorial. There are many options for customization, but this tutorial does not list out what all the options mean, as I frequently see with programs you would run on the command line.
 
-
+ANCOM-BC2 will perform its own normalization - it does not use the CLR transformation we used for the PCA ordination - therefore you will need to start with your full ASV table which will take some time to load.
 
 This chunk of code can be run with a clean environment, without repeating any of the above steps The input for ANCOM-BC2 used here is a phyloseq object, so we start by reading in the ASV table, the taxonomy table, and the metadata and create that phyloseq object.  Notice that you will be using the dataset that does not have diseased or blank samples and *does not have low abundance ASVs removed*.
+
+After you have your phyloseq object, you will want to understand what you are asking ANCOM-BC2 to test. ANCOM-BC2 results will be expressed as a relative relationship - it will test variables in the order that they are input. The default in R is alphabetical order, but I want to compare taxa "after" relative to "before", so I need to manually state the order of input so that "before" is input first.
 
 
 ```{r, echo=FALSE}
